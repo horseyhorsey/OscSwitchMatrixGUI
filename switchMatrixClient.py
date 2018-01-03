@@ -1420,6 +1420,17 @@ def main():
                                     buttonMV.Enabled = False
                                     gs.Add(buttonMV, 0, wx.EXPAND)
                                 pass
+            #Add the flippers SF2 SF4
+            for i in range(2,6):
+                switch_code = "SF%s" % i
+                if(switch_code in game_switches):
+                    sname = game_switches[switch_code]
+                    button = buttonMaker.makeButton(sname, switches)
+                    if(frame.graphical_mode is False):
+                        gs.Add(button, 0, wx.EXPAND)
+                    else:
+                        buttonMV = buttonMaker.makeGridButton(sname, switches, forced_frame=frame.winButtonLayoutPalette)
+                        gs.Add(buttonMV, 0, wx.EXPAND)                     
         # go through the matrix trying to find switches from the yaml
 
         print "Adding remaining dedicated switches..."
