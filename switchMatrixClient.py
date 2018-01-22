@@ -214,6 +214,8 @@ def sendOSC(evt_src, new_state=None):
 
 class GameLamp(object):
     def __init__(self, name, yaml_number, lamplocdata):
+        if isinstance(name, dict):
+            name = name['name']
         ld = lamplocdata[name] if lamplocdata is not None else None
         if (ld is not None):
             y = ld['y']
@@ -290,7 +292,11 @@ class ButtonMaker(object):
 
     def makePFButton(self, sname, switches, number=None):
         if(number is None):
-            number = switches[sname]['number']
+            if isinstance(switches, dict):
+                number = switches[sname]['number']
+            else:
+                index =  next((index for (index, d) in enumerate(switches) if d['name'] == sname), None)
+                number = switches[index]['number']
         try:
             lbl = switches[sname]['label']
             #number = number + "\n" + lbl
@@ -335,9 +341,16 @@ class ButtonMaker(object):
 
     def makeGridButton(self, sname, switches, number=None, forced_frame=None):
         if(number is None):
-            number = switches[sname]['number']
+            if isinstance(switches, dict):
+                number = switches[sname]['number']
+            else:
+                index = next((index for (index, x) in enumerate(switches) if x['name'] == sname), None)
+                number = switches[index]
         try:
-            lbl = switches[sname]['label']
+            if isinstance(switches, dict):
+                lbl = switches[sname]['label']
+            else:
+                lbl = switches[index]['label']
 
         except Exception, e:
             lbl = sname
@@ -384,8 +397,12 @@ class ButtonMaker(object):
 
     def makeLampMoveButton(self, lname, lamps, number=None):
         if(number is None):
+            if isinstance(lname, dict):
+                lname = lname['name']
             number = lamps[lname].yaml_number
 
+        if isinstance(lname, dict):
+            lname = lname['name']
         lbl = lname
 
         button = wx.Button(self.frame.winLampLayoutPalette, label='%s\n%s' % (lname, number))
@@ -1263,7 +1280,12 @@ def main():
         if 'PRSwitches' in yaml_data:
             switches = yaml_data['PRSwitches']
             for name in switches:
-                item_dict = switches[name]
+
+                if not isinstance(switches, list):
+                    item_dict = switches[name]
+                else:
+                    item_dict = name
+
                 yaml_number = str(item_dict['number'])
 
                 if 'label' in item_dict:
@@ -1280,20 +1302,33 @@ def main():
             lamps = yaml_data['PRLamps']
 
             for name in lamps:
-                item_dict = lamps[name]
+
+                if not isinstance(lamps, list):
+                    item_dict = lamps[name]
+                else:
+                    item_dict = name
+
                 yaml_number = str(item_dict['number'])
 
                 game_lamps[yaml_number] = name
 
                 lamplocation = find_key_in_list_of_dicts(name, frame.layout_data['lamp_locations'])
                 lamp = GameLamp(name, yaml_number, lamplocation)
-                lamp_list[name] = lamp
+
+                if not isinstance(lamps, list):
+                    lamp_list[name] = lamp
+                else:
+                    lamp_list[name['name']] = lamp
 
         if 'WsRGBs' in yaml_data:
             lamps = yaml_data['WsRGBs']
 
             for name in lamps:
-                item_dict = lamps[name]
+                if not isinstance(lamps, list):
+                    item_dict = lamps[name]
+                else:
+                    item_dict = name
+
                 yaml_number = str(item_dict['number'])
 
                 game_lamps[yaml_number] = name
@@ -1306,7 +1341,12 @@ def main():
             lamps = yaml_data['PRLEDs']
 
             for name in lamps:
-                item_dict = lamps[name]
+
+                if not isinstance(lamps, list):
+                    item_dict = lamps[name]
+                else:
+                    item_dict = name
+
                 yaml_number = str(item_dict['number'])
 
                 game_lamps[yaml_number] = name
@@ -1370,7 +1410,12 @@ def main():
 
                 if switch_code in game_switches:
                     sname = game_switches[switch_code]
+
+                    # Check if dict
+                    if isinstance(sname, dict):
+                        sname = sname['name']
                     button = buttonMaker.makeButton(sname, switches)
+
                     # remove the switch from the to-do list
                     del game_switches[switch_code]
                     if(frame.graphical_mode is False):
@@ -1396,10 +1441,15 @@ def main():
             for r in range(0,8):
                     for c in range(0,8):
                             switch_code = 'S%s%s' % (c+1, r+1)
-
+                            #switch_code is str, gs is dict
                             if switch_code in game_switches:
                                 sname = game_switches[switch_code]
+
+                                # Check if dict
+                                if isinstance(sname, dict):
+                                    sname = sname['name']
                                 button = buttonMaker.makeButton(sname, switches)
+
                                 # remove the switch from the to-do list
                                 del game_switches[switch_code]
                                 if(frame.graphical_mode is False):
@@ -1425,7 +1475,13 @@ def main():
                 switch_code = "SF%s" % i
                 if(switch_code in game_switches):
                     sname = game_switches[switch_code]
-                    button = buttonMaker.makeButton(sname, switches)
+
+                    if not isinstance(sname, dict):
+                        button = buttonMaker.makeButton(sname, switches)
+                    else:
+                        sname = sname['name']
+                        button = buttonMaker.makeButton(sname, switches)
+
                     if(frame.graphical_mode is False):
                         gs.Add(button, 0, wx.EXPAND)
                     else:
@@ -1442,7 +1498,12 @@ def main():
             switch_code = "SD%s" % i
             if(switch_code in game_switches):
                 sname = game_switches[switch_code]
-                button = buttonMaker.makeButton(sname, switches)
+                if not isinstance(sname, dict):
+                    button = buttonMaker.makeButton(sname, switches)
+                else:
+                    sname = sname['name']
+                    button = buttonMaker.makeButton(sname, switches)
+
                 if(frame.graphical_mode is False):
                     gs.Add(button, 0, wx.EXPAND)
                 else:
@@ -1469,6 +1530,8 @@ def main():
         # END main()
 
 def find_key_in_list_of_dicts(key, list):
+    if isinstance(key, dict):
+        key = key['name']
     found_item = next((tmpItem for tmpItem in list if key in tmpItem), None)
     return found_item
 
