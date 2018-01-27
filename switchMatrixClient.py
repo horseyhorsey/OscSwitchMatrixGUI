@@ -306,7 +306,11 @@ class ButtonMaker(object):
 
         hidden = False
         btnlocation = find_key_in_list_of_dicts(sname, self.frame.layout_data['button_locations'])
-        if sname in switches and (btnlocation is not None):
+        if isinstance(switches, list) and btnlocation is not None:
+            y = btnlocation[sname]['y']
+            x = btnlocation[sname]['x']
+            hidden = btnlocation[sname]['hide']
+        elif sname in switches and (btnlocation is not None):
             y = btnlocation[sname]['y']
             x = btnlocation[sname]['x']
             if('hide' in btnlocation[sname]):
@@ -1405,7 +1409,7 @@ def main():
 
         elif(frame.switch_style == "sternSAM"):
             print("Using SternSAM style switch numbering.  Trying to order switches...")
-            for r in range(0,64):
+            for r in range(0,65):
                 switch_code = 'S%02d' % r
 
                 if switch_code in game_switches:
