@@ -291,14 +291,22 @@ class ButtonMaker(object):
             return self.makeGridButton(sname, switches, number)
 
     def makePFButton(self, sname, switches, number=None):
+
         if(number is None):
             if isinstance(switches, dict):
                 number = switches[sname]['number']
             else:
-                index =  next((index for (index, d) in enumerate(switches) if d['name'] == sname), None)
+                if not isinstance(sname, dict):
+                    index =  next((index for (index, d) in enumerate(switches) if d['name'] == sname), None)
+                else:
+                    index = next((index for (index, d) in enumerate(switches) if d['name'] == sname['name']), None)
                 number = switches[index]['number']
         try:
-            lbl = switches[sname]['label']
+            if isinstance(sname, dict):
+                sname = sname['name']
+                lbl = sname['label']
+            else:
+                lbl = switches[sname]['label']
             #number = number + "\n" + lbl
         except Exception, e:
             lbl = sname
@@ -309,7 +317,8 @@ class ButtonMaker(object):
         if isinstance(switches, list) and btnlocation is not None:
             y = btnlocation[sname]['y']
             x = btnlocation[sname]['x']
-            hidden = btnlocation[sname]['hide']
+            if('hide' in btnlocation[sname]):
+                hidden = btnlocation[sname]['hide']
         elif sname in switches and (btnlocation is not None):
             y = btnlocation[sname]['y']
             x = btnlocation[sname]['x']
@@ -1302,27 +1311,30 @@ def main():
             print "----"
             raise
 
-        if 'PRLamps' in yaml_data:
-            lamps = yaml_data['PRLamps']
+        try:
+            if 'PRLamps' in yaml_data:
+                lamps = yaml_data['PRLamps']
 
-            for name in lamps:
+                for name in lamps:
 
-                if not isinstance(lamps, list):
-                    item_dict = lamps[name]
-                else:
-                    item_dict = name
+                    if not isinstance(lamps, list):
+                        item_dict = lamps[name]
+                    else:
+                        item_dict = name
 
-                yaml_number = str(item_dict['number'])
+                    yaml_number = str(item_dict['number'])
 
-                game_lamps[yaml_number] = name
+                    game_lamps[yaml_number] = name
 
-                lamplocation = find_key_in_list_of_dicts(name, frame.layout_data['lamp_locations'])
-                lamp = GameLamp(name, yaml_number, lamplocation)
+                    lamplocation = find_key_in_list_of_dicts(name, frame.layout_data['lamp_locations'])
+                    lamp = GameLamp(name, yaml_number, lamplocation)
 
-                if not isinstance(lamps, list):
-                    lamp_list[name] = lamp
-                else:
-                    lamp_list[name['name']] = lamp
+                    if not isinstance(lamps, list):
+                        lamp_list[name] = lamp
+                    else:
+                        lamp_list[name['name']] = lamp
+        except:
+            pass
 
         if 'WsRGBs' in yaml_data:
             lamps = yaml_data['WsRGBs']
@@ -1357,7 +1369,11 @@ def main():
 
                 lamplocation = find_key_in_list_of_dicts(name, frame.layout_data['lamp_locations'])
                 lamp = GameLamp(name, yaml_number, lamplocation)
-                lamp_list[name] = lamp
+
+                if not isinstance(lamps, list):
+                    lamp_list[name] = lamp
+                else:
+                    lamp_list[name['name']] = lamp
 
         if(len(lamp_list)==0):
             print("PRLamps, PRLEDS, wsRGBs section(s) NOT found in specified yaml file '%s'.\nExiting..." % options['yaml_file'])
