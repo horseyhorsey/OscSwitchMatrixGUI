@@ -357,6 +357,9 @@ class ButtonMaker(object):
             if isinstance(switches, dict):
                 number = switches[sname]['number']
             else:
+                if isinstance(sname, dict):
+                    sname = sname['name']
+
                 index = next((index for (index, x) in enumerate(switches) if x['name'] == sname), None)
                 number = switches[index]
         try:
