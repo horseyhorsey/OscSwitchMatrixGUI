@@ -1518,7 +1518,7 @@ def main():
         # anything left in that dict wasn't in the matrix (i.e., a dedicated switch)
 
         for i in range(0,80):
-            switch_code = "SD%s" % i
+            switch_code =  "SD0%s" % i if i < 10 else "SD%s" % i
             if(switch_code in game_switches):
                 sname = game_switches[switch_code]
                 if not isinstance(sname, dict):
